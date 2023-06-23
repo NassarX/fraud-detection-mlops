@@ -20,6 +20,11 @@ from fraud_detection.pipelines.etl_app.nodes.data_preprocessing import (
     split_train_test_data
 )
 
+from fraud_detection.pipelines.etl_app.nodes.data_exploration import (
+    plot_fraud_distribution,
+    plot_transactions_distribution,
+    plot_transactions_daily_stats
+)
 
 def create_etl_pipeline(**kwargs):
     # Data Generations Nodes
@@ -122,8 +127,33 @@ def create_etl_pipeline(**kwargs):
         ]
     )
 
+    # Data Exploration Nodes
+    pipeline_exploration = Pipeline(
+        [
+            node(
+                func=plot_fraud_distribution,
+                inputs=dict(transactions="simulated_transactions_data"),
+                outputs="fraud_distribution_plot",
+                tags=["etl", "etl_explore"],
+            ),
+            node(
+                func=plot_transactions_distribution,
+                inputs=dict(transactions="simulated_transactions_data"),
+                outputs="transactions_distributions_plot",
+                tags=["etl", "etl_explore"],
+            ),
+            node(
+                func=plot_transactions_daily_stats,
+                inputs=dict(transactions="simulated_transactions_data"),
+                outputs="transactions_daily_stats_plot",
+                tags=["etl", "etl_explore"],
+            ),
+        ]
+    )
+
     return (
             pipeline_data_generation
             + pipeline_feature_transformation
             + pipeline_data_preprocessing
+            + pipeline_exploration
     )

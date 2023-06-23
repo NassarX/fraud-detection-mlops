@@ -1,6 +1,6 @@
 # ETL
-n_customers: 100
-n_terminals: 100
+n_customers: 1000
+n_terminals: 1000
 nb_days: 30
 start_date: "2020-01-01"
 radius: 5
