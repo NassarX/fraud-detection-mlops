@@ -40,6 +40,7 @@ def generate_customer_profiles_data(n_customers: int, random_state=0) -> pd.Data
         'mean_amount',
         'std_amount',
         'mean_nb_tx_per_day'])
+    
     return customer_profiles_table
 
 
@@ -82,6 +83,7 @@ def select_terminals_within_customer_radius(customer_profile: dict, terminals_da
         returns:
             updated_customer_profiles_data: the updated customer profiles dataframe
     """
+
     # Use numpy arrays in the following to speed up computations
     x_y_terminals = terminals_data[['x_terminal_id', 'y_terminal_id']].values.astype(float)
 
@@ -89,8 +91,9 @@ def select_terminals_within_customer_radius(customer_profile: dict, terminals_da
     x_y_customer = np.array([customer_profile['x_customer_id'], customer_profile['y_customer_id']], dtype=float)
 
     # Squared difference in coordinates between customer and terminal locations
-    squared_diff_x_y = np.square(x_y_customer - x_y_terminals)
-
+    squared_diff_x_y = np.square(x_y_customer.T - x_y_terminals)
+    #squared_diff_x_y = np.square(x_y_customer - x_y_terminals)
+    
     # Sum along rows and compute squared root to get distance
     dist_x_y = np.sqrt(np.sum(squared_diff_x_y, axis=1))
 
@@ -98,7 +101,6 @@ def select_terminals_within_customer_radius(customer_profile: dict, terminals_da
     available_terminals = list(np.where(dist_x_y < radius)[0])
 
     return available_terminals
-
 
 def map_terminals_to_customers(customers_data: pd.DataFrame, terminals_data: pd.DataFrame,
                                radius: float) -> pd.DataFrame:
@@ -207,6 +209,13 @@ def generate_transactions_data(customers_terminals_data: pd.DataFrame, start_dat
     # TRANSACTION_ID are the dataframe indices, starting from 0
     transactions_data.rename(columns={'index': 'TRANSACTION_ID'}, inplace=True)
 
+    # set customer_id as interger
+    transactions_data['CUSTOMER_ID'] = transactions_data['CUSTOMER_ID'].astype(np.int64)
+    transactions_data['TERMINAL_ID'] = transactions_data['TERMINAL_ID'].astype(np.int64)
+    transactions_data['TX_AMOUNT'] = transactions_data['TX_AMOUNT'].astype(np.float64)
+    transactions_data['TX_TIME_SECONDS'] = transactions_data['TX_TIME_SECONDS'].astype(np.int64)
+    transactions_data['TX_TIME_DAYS'] = transactions_data['TX_TIME_DAYS'].astype(np.int64)
+       
     return transactions_data
 
 
