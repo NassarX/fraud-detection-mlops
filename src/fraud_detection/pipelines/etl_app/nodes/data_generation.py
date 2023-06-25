@@ -147,8 +147,8 @@ def generate_transactions_data(customers_terminals_data: pd.DataFrame, start_dat
         std_amount = customer_profile['std_amount'].values[0]
         mean_nb_tx_per_day = customer_profile['mean_nb_tx_per_day'].values[0]
         nb_terminals = customer_profile['nb_terminals'].values[0]
-        #available_terminals = ast.literal_eval(customer_profile['available_terminals'].values[0])
-        available_terminals = customer_profile['available_terminals'].values[0]
+        available_terminals = ast.literal_eval(customer_profile['available_terminals'].values[0])
+        #available_terminals = customer_profile['available_terminals'].values[0]
 
         if nb_terminals == 0:
             continue  # Skip generating transactions if no available terminals

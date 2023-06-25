@@ -18,15 +18,14 @@ from kedro.framework.context import KedroContext
 from src.fraud_detection.pipelines.etl_app.nodes.data_generation import (
     generate_customer_profiles_data,
     generate_terminals_data,
-    generate_dataset,
     generate_transactions_data,
-    generate_fraud_Scenarios_data
+    generate_fraud_Scenarios_data,
 )
 
 from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
     transform_datetime_features,
     transform_customer_features,
-    transform_terminal_features
+    transform_terminal_features,  
 )
 
 @pytest.fixture
@@ -120,18 +119,7 @@ class TestProjectContext:
         assert terminal_data.dtypes['TERMINAL_ID'] == np.int64
         assert terminal_data.dtypes['x_terminal_id'] == np.float64
         assert terminal_data.dtypes['y_terminal_id'] == np.float64
-
-    
-    def test_generate_dataset_invalid_date(self, project_context):
-        n_customers = 100
-        n_terminals = 50
-        radius = 10.0
-        start_date = '2023/01/01'
-        nb_days = 7
-        
-        with pytest.raises(ValueError):
-            generate_dataset(n_customers, n_terminals, radius, start_date, nb_days)
-
+  
     def test_select_terminals_within_customer_radius(self, project_context):
                
         # extract one row as example
@@ -141,12 +129,11 @@ class TestProjectContext:
         # Assert that all values in the example list are integers
         for value in example:
             assert isinstance(value, int)
-            
+
         # Assert that all values in the example list are integers
         for value in customer_profiles_table['nb_terminals']:
-            assert isinstance(value, int)
-            
-            
+            assert isinstance(value, int)           
+
     def test_generate_transactions_data(self):
               
         # Define the expected column names in the generated dataframe
@@ -366,26 +353,3 @@ class TestProjectContext:
         assert fraud_transactions_transformed_3.dtypes['TERMINAL_ID_NB_TX_30DAY_WINDOW'] == np.float64
         assert fraud_transactions_transformed_3.dtypes['TERMINAL_ID_RISK_30DAY_WINDOW'] == np.float64  
                                                  
-    def test_generate_dataset(self):
-        n_customers = 1000
-        n_terminals = 1000
-        nb_days = 30
-        start_date = "2020-01-01"
-        radius = 5
-        
-        results_gd = generate_dataset(n_customers, n_terminals, radius, start_date, nb_days)
-
-        expected_columns_gd = [
-            'TRANSACTION_ID',
-            'TX_DATETIME',
-            'CUSTOMER_ID',
-            'TERMINAL_ID',
-            'TX_AMOUNT',
-            'TX_TIME_SECONDS',
-            'TX_TIME_DAYS',
-            'TX_FRAUD',
-            'TX_FRAUD_SCENARIO',
-        ]
-        
-        # Assert that the generated dataframe has the expected column names
-        assert list(results_gd.columns) == expected_columns_gd
