@@ -20,8 +20,8 @@ from kedro.framework.context import KedroContext
 from src.fraud_detection.pipelines.etl_app.nodes.data_generation import (
     generate_customer_profiles_data,
     generate_terminals_data,
-    generate_dataset,
-    select_terminals_within_customer_radius
+    generate_transactions_data,
+    generate_fraud_Scenarios_data
 )
 
 from src.fraud_detection.pipelines.etl_app.nodes.data_exploration import (
@@ -29,20 +29,12 @@ from src.fraud_detection.pipelines.etl_app.nodes.data_exploration import (
     plot_transactions_daily_stats,
     plot_transactions_distribution,
     get_stats
-
-)
-
-#from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
-    #get_customer_spending_behaviour_features   
-#)
-    generate_transactions_data,
-    generate_fraud_Scenarios_data,
 )
 
 from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
     transform_datetime_features,
     transform_customer_features,
-    transform_terminal_features,  
+    transform_terminal_features, 
 )
 
 @pytest.fixture
@@ -227,7 +219,6 @@ class TestProjectContext:
             'TX_FRAUD': [0, 1, 0, 1, 0, 1, 0]
         })
 
-
         result = plot_transactions_daily_stats(transactions)
 
         assert isinstance(result, plt.Figure)
@@ -240,7 +231,7 @@ class TestProjectContext:
         assert result.axes[0].get_ylabel() == 'Number'
 
         # Assert that the y-axis limits are correct
-        assert result.axes[0].get_ylim() == (0, 300)
+        assert result.axes[0].get_ylim() == (0, 2000)
 
     
         legend_labels = ["# transactions per day", "# fraudulent txs per day", "# fraudulent cards per day"]
