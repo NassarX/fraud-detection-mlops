@@ -96,12 +96,14 @@ def plot_transactions_daily_stats(transactions: pd.DataFrame):
         'Total transactions, and number of fraudulent transactions \n and number of compromised cards per day',
         fontsize=20)
     sns_plot.set(xlabel="Number of days since beginning of data generation", ylabel="Number")
-    sns_plot.set_ylim([0, 300])
+    sns_plot.set_ylim([0, 2000])
 
     labels_legend = ["# transactions per day", "# fraudulent txs per day", "# fraudulent cards per day"]
     sns_plot.legend(loc='upper left', labels=labels_legend, ncol=3, fontsize=15)
 
     return fraud_and_transactions_stats_fig
+
+
 
 
 def get_stats(transactions_df):
@@ -116,3 +118,4 @@ def get_stats(transactions_df):
         ['TX_TIME_DAYS']).CUSTOMER_ID.nunique()
 
     return nb_tx_per_day, nb_fraud_per_day, nb_fraudcard_per_day
+
