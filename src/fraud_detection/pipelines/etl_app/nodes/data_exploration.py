@@ -119,9 +119,3 @@ def get_stats(transactions_df):
 
     return nb_tx_per_day, nb_fraud_per_day, nb_fraudcard_per_day
 
-# read data
-#transactions = pd.read_csv('data/01_raw/06_fraud_transactions_data.csv')
-
-#fraud_and_transactions_fig, tx_stats = plot_transactions_daily_stats(transactions)
-#print(tx_stats.groupby(['stat_type'])['value'].mean())
-#plt.show()
