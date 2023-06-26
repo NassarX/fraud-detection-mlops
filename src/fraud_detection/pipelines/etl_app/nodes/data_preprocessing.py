@@ -2,6 +2,7 @@ import os
 from typing import Any, Callable, Dict, Tuple
 import pandas as pd
 from datetime import timedelta, datetime as dt
+import matplotlib.pyplot as plt
 
 from pandas import DataFrame
 

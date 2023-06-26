@@ -8,6 +8,8 @@ named ``test_*`` which test a unit of logic.
 To run the tests, run ``kedro test`` from the project root directory.
 """
 import numpy as np
+import matplotlib.pyplot as plt
+
 import pandas as pd
 import pytest
 from kedro.config import ConfigLoader
@@ -18,6 +20,21 @@ from kedro.framework.context import KedroContext
 from src.fraud_detection.pipelines.etl_app.nodes.data_generation import (
     generate_customer_profiles_data,
     generate_terminals_data,
+    generate_dataset,
+    select_terminals_within_customer_radius
+)
+
+from src.fraud_detection.pipelines.etl_app.nodes.data_exploration import (
+    plot_fraud_distribution,
+    plot_transactions_daily_stats,
+    plot_transactions_distribution,
+    get_stats
+
+)
+
+#from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
+    #get_customer_spending_behaviour_features   
+#)
     generate_transactions_data,
     generate_fraud_Scenarios_data,
 )
@@ -52,6 +69,7 @@ fraud_transactions_data = pd.read_csv('data/02_intermediate/01_fraud_transaction
 fraud_transactions_transformed_2 = pd.read_csv('data/02_intermediate/02_fraud_transactions_transformed_data.csv') 
 
 class TestProjectContext:
+
     def test_project_path(self, project_context):
         assert project_context.project_path == Path.cwd()
         assert project_context._package_name == "fraud_detection"
@@ -119,6 +137,115 @@ class TestProjectContext:
         assert terminal_data.dtypes['TERMINAL_ID'] == np.int64
         assert terminal_data.dtypes['x_terminal_id'] == np.float64
         assert terminal_data.dtypes['y_terminal_id'] == np.float64
+
+    def test_plot_fraud_distribution(self, project_context):
+        # Create a sample transactions dataframe
+        transactions = pd.DataFrame({
+            "TX_FRAUD": [True, False, False, True, True, False, False, True, False, True]
+        })
+
+        # Call the function
+        fig = plot_fraud_distribution(transactions)
+
+        # Check if the figure is not None
+        assert fig is not None
+
+        # Check if the x-axis label is set correctly
+        assert fig.axes[0].get_xlabel() == "Transaction Type"
+
+        # Check if the y-axis label is set correctly
+        assert fig.axes[0].get_ylabel() == "Count"
+
+        # Check if the x-axis tick labels are set correctly
+        assert fig.axes[0].get_xticklabels()[0].get_text() == "Non-Fraud"
+        assert fig.axes[0].get_xticklabels()[1].get_text() == "Fraud"
+
+        # Check if the plot title is set correctly
+        assert fig.axes[0].get_title() == "Distribution of Fraud and Non-Fraud Transactions"
+
+        # Check if the bar annotations are correct
+        #assert fig.axes[0].patches[0].get_height() == 3
+        #assert fig.axes[0].patches[1].get_height() == 3
+
+        # Cleanup - close the figure to free up resources
+        plt.close(fig)
+
+
+
+    def test_plot_transactions_distribution(self, project_context):
+        # Call the function with example transactions
+        df = pd.read_csv("data/01_raw/04_transactions_data.csv")
+        fig = plot_transactions_distribution(df)
+
+        assert isinstance(fig, plt.Figure)
+
+        assert len(fig.axes) == 2
+
+        ax1 = fig.axes[0]
+        assert ax1.get_title() == 'Distribution of transaction amounts'
+        assert ax1.get_xlabel() == 'Amount'
+        assert ax1.get_ylabel() == 'Number of transactions'
+
+    
+        ax2 = fig.axes[1]
+        assert ax2.get_title() == 'Distribution of transaction times'
+        assert ax2.get_xlabel() == 'Time (days)'
+        assert ax2.get_ylabel() == 'Number of transactions'
+
+        plt.close(fig)
+
+
+    def test_get_stats(self, project_context):
+        data = {
+            'TX_TIME_DAYS': [1, 1, 2, 2, 2, 3, 3],
+            'CUSTOMER_ID': [1, 2, 3, 4, 5, 6, 7],
+            'TX_FRAUD': [0, 1, 0, 1, 0, 1, 0]
+        }
+
+        data = pd.DataFrame(data)
+
+        nb_tx_per_day, nb_fraud_per_day, nb_fraudcard_per_day = get_stats(data)      
+
+        expected_tx_per_day = pd.Series([2, 3, 2], index=[1, 2, 3])
+        assert nb_tx_per_day.equals(expected_tx_per_day)
+
+        # Check the number of fraudulent transactions per day
+        expected_fraud_per_day = pd.Series([1, 1, 1], index=[1, 2, 3])
+        assert (nb_fraud_per_day == expected_fraud_per_day).all()
+
+        # Check the number of fraudulent cards per day
+        expected_fraudcard_per_day = pd.Series([1, 1, 1], index=[1, 2, 3])
+        assert nb_fraudcard_per_day.equals(expected_fraudcard_per_day)
+
+
+
+    def test_plot_transactions_daily_stats(self, project_context):
+        # Create a sample transactions dataframe for testing
+        transactions = pd.DataFrame({
+            'TX_TIME_DAYS': [1, 1, 2, 2, 2, 3, 3],
+            'CUSTOMER_ID': [1, 2, 3, 4, 5, 6, 7],
+            'TX_FRAUD': [0, 1, 0, 1, 0, 1, 0]
+        })
+
+
+        result = plot_transactions_daily_stats(transactions)
+
+        assert isinstance(result, plt.Figure)
+
+        # Assert that the plot title is correct
+        assert result.axes[0].get_title() == 'Total transactions, and number of fraudulent transactions \n and number of compromised cards per day'
+
+        assert result.axes[0].get_xlabel() == 'Number of days since beginning of data generation'
+
+        assert result.axes[0].get_ylabel() == 'Number'
+
+        # Assert that the y-axis limits are correct
+        assert result.axes[0].get_ylim() == (0, 300)
+
+    
+        legend_labels = ["# transactions per day", "# fraudulent txs per day", "# fraudulent cards per day"]
+        assert [text.get_text() for text in result.axes[0].legend_.get_texts()] == legend_labels
+
   
     def test_select_terminals_within_customer_radius(self, project_context):
                
@@ -353,3 +480,4 @@ class TestProjectContext:
         assert fraud_transactions_transformed_3.dtypes['TERMINAL_ID_NB_TX_30DAY_WINDOW'] == np.float64
         assert fraud_transactions_transformed_3.dtypes['TERMINAL_ID_RISK_30DAY_WINDOW'] == np.float64  
                                                  
+
