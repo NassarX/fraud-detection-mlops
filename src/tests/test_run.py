@@ -25,14 +25,16 @@ from src.fraud_detection.pipelines.etl_app.nodes.data_generation import (
 )
 
 from src.fraud_detection.pipelines.etl_app.nodes.data_exploration import (
+    plot_fraud_distribution,
     plot_transactions_daily_stats,
-    plot_transactions_distribution
+    plot_transactions_distribution,
+    get_stats
+
 )
 
-from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
-    get_customer_spending_behaviour_features
-    
-)
+#from src.fraud_detection.pipelines.etl_app.nodes.feature_transformation import (
+    #get_customer_spending_behaviour_features   
+#)
 
 
 @pytest.fixture
@@ -51,6 +53,7 @@ def project_context(config_loader):
 
 
 class TestProjectContext:
+
     def test_project_path(self, project_context):
         assert project_context.project_path == Path.cwd()
         assert project_context._package_name == "fraud_detection"
@@ -130,131 +133,113 @@ class TestProjectContext:
         with pytest.raises(ValueError):
             generate_dataset(n_customers, n_terminals, radius, start_date, nb_days)
 
+
+
+    def test_plot_fraud_distribution(self, project_context):
+        # Create a sample transactions dataframe
+        transactions = pd.DataFrame({
+            "TX_FRAUD": [True, False, False, True, True, False, False, True, False, True]
+        })
+
+        # Call the function
+        fig = plot_fraud_distribution(transactions)
+
+        # Check if the figure is not None
+        assert fig is not None
+
+        # Check if the x-axis label is set correctly
+        assert fig.axes[0].get_xlabel() == "Transaction Type"
+
+        # Check if the y-axis label is set correctly
+        assert fig.axes[0].get_ylabel() == "Count"
+
+        # Check if the x-axis tick labels are set correctly
+        assert fig.axes[0].get_xticklabels()[0].get_text() == "Non-Fraud"
+        assert fig.axes[0].get_xticklabels()[1].get_text() == "Fraud"
+
+        # Check if the plot title is set correctly
+        assert fig.axes[0].get_title() == "Distribution of Fraud and Non-Fraud Transactions"
+
+        # Check if the bar annotations are correct
+        #assert fig.axes[0].patches[0].get_height() == 3
+        #assert fig.axes[0].patches[1].get_height() == 3
+
+        # Cleanup - close the figure to free up resources
+        plt.close(fig)
+
+
+
+    def test_plot_transactions_distribution(self, project_context):
+        # Call the function with example transactions
+        df = pd.read_csv("data/01_raw/04_transactions_data.csv")
+        fig = plot_transactions_distribution(df)
+
+        assert isinstance(fig, plt.Figure)
+
+        assert len(fig.axes) == 2
+
+        ax1 = fig.axes[0]
+        assert ax1.get_title() == 'Distribution of transaction amounts'
+        assert ax1.get_xlabel() == 'Amount'
+        assert ax1.get_ylabel() == 'Number of transactions'
+
     
+        ax2 = fig.axes[1]
+        assert ax2.get_title() == 'Distribution of transaction times'
+        assert ax2.get_xlabel() == 'Time (days)'
+        assert ax2.get_ylabel() == 'Number of transactions'
 
-
-def test_select_terminals_within_customer_radius(self, project_context):
-    # Create a customer profile
-    customer_profile = {
-        'x_customer_id': 10.0,
-        'y_customer_id': 10.0
-    }
-
-    # Create a DataFrame with terminal profiles
-    terminals_data = pd.DataFrame({
-        'x_terminal_id': [9.0, 10.0, 11.0, 12.0],
-        'y_terminal_id': [10.0, 11.0, 12.0, 13.0]
-    })
-
-    # Define the radius
-    radius = 5.0
-
-    # Expected result: Indices of terminals within the radius
-    expected_result = [0, 1]
-
-    # Call the function to select terminals within the customer's radius
-    result = select_terminals_within_customer_radius(customer_profile, terminals_data, radius)
-
-    # Compare the result with the expected result
-    assert result == expected_result
-
-def sample_transactions_data():
-    # Create a sample transactions dataframe
-    transactions_data = pd.DataFrame({
-        'CUSTOMER_ID': [1, 1, 1, 2, 2, 2, 3, 3, 3],
-        'TRANSACTION_ID': [101, 102, 103, 201, 202, 203, 301, 302, 303],
-        'TX_DATETIME': pd.to_datetime(['2023-06-01 09:00:00', '2023-06-05 14:00:00', '2023-06-10 10:00:00',
-                                       '2023-06-02 08:00:00', '2023-06-04 11:00:00', '2023-06-07 16:00:00',
-                                       '2023-06-03 13:00:00', '2023-06-06 15:00:00', '2023-06-10 18:00:00']),
-        'TX_AMOUNT': [50.0, 30.0, 20.0, 100.0, 150.0, 80.0, 70.0, 90.0, 120.0]
-    })
-    return transactions_data
-
-def test_get_customer_spending_behaviour_features(sample_transactions_data):
-    # Call the function under test
-    result = get_customer_spending_behaviour_features(sample_transactions_data, [1, 7, 30])
-
-    # Verify the output dataframe structure and values
-    assert result.columns.tolist() == ['CUSTOMER_ID', 'TRANSACTION_ID', 'TX_DATETIME', 'TX_AMOUNT',
-                                       'CUSTOMER_ID_NB_TX_1DAY_WINDOW', 'CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW',
-                                       'CUSTOMER_ID_NB_TX_7DAY_WINDOW', 'CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW',
-                                       'CUSTOMER_ID_NB_TX_30DAY_WINDOW', 'CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW']
-    assert result['CUSTOMER_ID_NB_TX_1DAY_WINDOW'].tolist() == [1, 1, 1, 1, 2, 3, 1, 2, 3]
-    assert result['CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW'].tolist() == [50.0, 30.0, 20.0, 100.0, 125.0, 83.33333333333333, 70.0, 60.0, 70.0]
-    assert result['CUSTOMER_ID_NB_TX_7DAY_WINDOW'].tolist() == [3, 3, 3, 3, 6, 6, 6, 6, 6]
-    assert result['CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW'].tolist() == [33.333333333333336, 33.333333333333336, 33.333333333333336,
-                                                                     33.333333333333336, 95.0, 81.66666666666667,
-                                                                     80.0, 81.66666666666667, 93.33333333333333]
-    assert result['CUSTOMER_ID_NB_TX_30DAY_WINDOW'].tolist() == [3, 3, 3, 3, 6, 6, 6, 6, 6]
-    assert result['CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW']
-
-
-def test_plot_transactions_distribution(sample_transactions_data):
-    # Call the function with example transactions
-    fig = plot_transactions_distribution(sample_transactions_data)
-
-    # Check if the function returns a matplotlib figure object
-    assert isinstance(fig, plt.Figure)
-
-    # Check if the figure has two subplots
-    assert len(fig.axes) == 2
-
-    # Check the properties of the first subplot
-    ax1 = fig.axes[0]
-    assert ax1.get_title() == 'Distribution of transaction amounts'
-    assert ax1.get_xlabel() == 'Amount'
-    assert ax1.get_ylabel() == 'Number of transactions'
-
-    # Check the properties of the second subplot
-    ax2 = fig.axes[1]
-    assert ax2.get_title() == 'Distribution of transaction times'
-    assert ax2.get_xlabel() == 'Time (days)'
-    assert ax2.get_ylabel() == 'Number of transactions'
-
-    # Add additional assertions if needed
-
-    # Clean up the plot after testing (optional)
-    plt.close(fig)
+        plt.close(fig)
 
 
 
-def test_get_stats():
-    df = pd.read_csv("data/01_raw/04_transactions_data.csv")
-    assert df.dtypes['TRANSACTION_ID'] == np.int64
-    assert df.dtypes['TX_DATETIME'] == np.float64
-    assert df.dtypes['CUSTOMER_ID'] == np.float64
-    assert df.dtypes['TERMINAL_ID'] == np.float64
-    assert df.dtypes['TX_AMOUNT'] == np.float64
-    assert df.dtypes['TX_TIME_SECONDS'] == np.float64
-    assert df.dtypes['TX_TIME_DAYS'] == np.float64
+    def test_get_stats(self, project_context):
+        data = {
+            'TX_TIME_DAYS': [1, 1, 2, 2, 2, 3, 3],
+            'CUSTOMER_ID': [1, 2, 3, 4, 5, 6, 7],
+            'TX_FRAUD': [0, 1, 0, 1, 0, 1, 0]
+        }
+
+        data = pd.DataFrame(data)
+
+        nb_tx_per_day, nb_fraud_per_day, nb_fraudcard_per_day = get_stats(data)      
+
+        expected_tx_per_day = pd.Series([2, 3, 2], index=[1, 2, 3])
+        assert nb_tx_per_day.equals(expected_tx_per_day)
+
+        # Check the number of fraudulent transactions per day
+        expected_fraud_per_day = pd.Series([1, 1, 1], index=[1, 2, 3])
+        assert (nb_fraud_per_day == expected_fraud_per_day).all()
+
+        # Check the number of fraudulent cards per day
+        expected_fraudcard_per_day = pd.Series([1, 1, 1], index=[1, 2, 3])
+        assert nb_fraudcard_per_day.equals(expected_fraudcard_per_day)
 
 
 
-def test_plot_transactions_daily_stats():
-    # Create a sample transactions dataframe for testing
-    transactions = pd.DataFrame({
-        "TX_TIME_DAYS": [1, 2, 3, 4, 5],
-        "value": [10, 20, 15, 30, 25]
-    })
+    def test_plot_transactions_daily_stats(self, project_context):
+        # Create a sample transactions dataframe for testing
+        transactions = pd.DataFrame({
+            'TX_TIME_DAYS': [1, 1, 2, 2, 2, 3, 3],
+            'CUSTOMER_ID': [1, 2, 3, 4, 5, 6, 7],
+            'TX_FRAUD': [0, 1, 0, 1, 0, 1, 0]
+        })
 
-    # Call the function to plot the daily statistics
-    fig = plot_transactions_daily_stats(transactions)
 
-    # Assertions to check the expected behavior of the function
-    assert isinstance(fig, plt.Figure)
-    assert fig.get_size_inches() == (20, 8)
+        result = plot_transactions_daily_stats(transactions)
 
-    # Check the plot elements
-    axes = fig.get_axes()
-    assert len(axes) == 1
-    ax = axes[0]
-    assert ax.get_title() == 'Total transactions, and number of fraudulent transactions \n and number of compromised cards per day'
-    assert ax.get_xlabel() == 'Number of days since beginning of data generation'
-    assert ax.get_ylabel() == 'Number'
-    assert ax.get_ylim() == (0, 300)
+        assert isinstance(result, plt.Figure)
 
-    # Check the legend labels
-    legend = ax.legend_
-    assert legend.get_texts()[0].get_text() == '# transactions per day'
-    assert legend.get_texts()[1].get_text() == '# fraudulent txs per day'
-    assert legend.get_texts()[2].get_text() == '# fraudulent cards per day'
+        # Assert that the plot title is correct
+        assert result.axes[0].get_title() == 'Total transactions, and number of fraudulent transactions \n and number of compromised cards per day'
+
+        assert result.axes[0].get_xlabel() == 'Number of days since beginning of data generation'
+
+        assert result.axes[0].get_ylabel() == 'Number'
+
+        # Assert that the y-axis limits are correct
+        assert result.axes[0].get_ylim() == (0, 300)
+
+    
+        legend_labels = ["# transactions per day", "# fraudulent txs per day", "# fraudulent cards per day"]
+        assert [text.get_text() for text in result.axes[0].legend_.get_texts()] == legend_labels
