@@ -33,12 +33,9 @@ def create_ml_pipeline(**kwargs):
                 func=evaluate_models,
                 inputs=dict(predictions="models_predictions", y_test="y_test"),
                 outputs="models_metrics",
-                tags=["ml_inference", "ml_eval", "ml"]
+                tags=["ml_inference", "ml_eval", "ml"],
             ),
         ]
     )
 
-    return (
-            pipeline_modeling
-            + pipeline_inference
-    )
+    return pipeline_modeling + pipeline_inference

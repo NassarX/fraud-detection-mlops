@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 entry_point = (
-    "kedro-mlflow-tutorial = fraud_detection.__main__:main"
+    "fraud-detection = fraud_detection.__main__:main"
 )
 
 
@@ -29,10 +29,11 @@ setup(
             "sphinx_rtd_theme==0.5.1",
             "nbsphinx==0.8.1",
             "nbstripout~=0.4",
-            "recommonmark==0.7.1",
             "sphinx-autodoc-typehints==1.11.1",
             "sphinx_copybutton==0.3.1",
             "ipykernel>=5.3, <7.0",
+            "Jinja2<3.1.0",
+            "myst-parser~=0.17.2",
         ]
     },
 )
