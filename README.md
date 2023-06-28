@@ -3,7 +3,8 @@
 >Course project of **`Machine Learning Operations (MLOPs)`**  course - [MDSAA-DS](www.novaims.unl.pt/MDSAA-DS) - Spring 2023
 
 ## Overview
-@TODO
+
+This project aims to build a machine learning pipeline for detecting fraudulent transactions in credit card data. The pipeline is built using the [Kedro](https://kedro.readthedocs.io/en/stable/) framework and [MLflow](https://mlflow.org/) for experiment tracking. The pipeline is deployed using [Docker](https://www.docker.com/) and [Github Actions](https://github.com/features/actions) for CI/CD.
 
 ## Table of Contents
 
@@ -17,7 +18,14 @@
   - [ML-based fraud detection system](#ml-based-fraud-detection-system)
     - [Fraud Detection Model](#fraud-detection-model)
     - [Traning and Validation](#training-and-validation)
-- [Future Work](#future-work)
+- [General Pipeline Structure](#general-pipeline-structure)
+- [Kedro Framework](#kedro-framework)
+- [Mlflow](#mlflow)
+- [Quick Start](#quick-start)
+    - [Local setup](#local-setup) 
+  - [Project Structure](#project-structure)
+- [Usage](#usage)
+  - [Local](#local-usage)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -50,6 +58,7 @@ The dataset is organized in a tabular form, with each transaction representing t
 ![Tx_table](assets/tx_table.png)
 
 #### Data Simulation
+The credit card transaction data is obtained from the collaboration between Worldline and Machine Learning Group. It is a realistic simulation of real-world credit card transactions and has been designed to include complicated fraud detection issues.
 
 The transaction data simulator we present below is a simplified approximation of real-world dynamics. Its design choice focuses on generating transactions and fraudulent behaviors with simple rules. The simulated datasets aim to highlight the issues faced by fraud detection practitioners with real-world data. 
 These datasets include class imbalance (less than 1% fraudulent transactions), a combination of numerical and categorical features (with numerous categorical values), complex feature relationships, and time-dependent fraud scenarios.
@@ -102,10 +111,117 @@ $$
 
 - Particular care must be taken in practice when splitting the dataset into training and validation sets, due to the sequential nature of credit card transactions, and the delay in fraud reporting.
 
+## General Pipeline Structure
+
+The goal of these pipelines is to create a systematic workflow where raw data is transformed into actionable business insights in an automated and repeatable fashion.
+Its importance comes from automating manual steps in the data science development cycle, which are repetitive, labour-intensive, error-prone, and time-consuming.
+
+![pipeline_structure](assets/general_pipelines.png)
+
+## Kedro Framework
+
+Kedro is a python package which facilitates the prototyping of data pipelines. It aims at enforcing software engineering best practices (separation between I/O and compute, abstraction, templating…). 
+
+- Kedro Pipelines:
+  - ETL pipelines.
+    - Data Generation
+    - Data Ingestion
+    - Data Transformation
+    - Data Loading
+    - Data Preprocessing
+  - Machine Learning pipelines
+    - Model training
+    - Model evaluation
+  - Inference pipelines
+    - Model serving
+    - Model monitoring
+
+## MLflow
+
+Mlflow is a library which manages the lifecycle of machine learning models. Mlflow provides 4 modules:
+
+- **Mlflow Tracking**: This modules focuses on experiment versioning. Its goal is to store all the objects needed to reproduce any code execution.
+- **Mlflow Projects**: This module provides a configuration files and CLI to enable reproducible execution of pipelines in production phase.
+- **Mlflow Models**: This module defines a standard way for packaging machine learning models, and provides built-in ways to serve registered models.
+- **Mlflow Model Registry**: This modules aims at monitoring deployed models.
+
+## Quick Start
+
+### Environment Setup
+
+#### Local Setup
+
+- Prerequisites
+  ```requirements.txt
+    git
+    Python 3.8+
+    pip
+    Conda
+    kedro
+    kedro-viz
+    mlflow
+    kedro-mlflow
+  ```
+To run the application locally, you need to create a virtual environment for your project.
+
+```shell
+conda create --name <env> python=3.10 -y
+```
+
+Activate the environment and install the dependencies.
+
+```shell
+conda activate <env>
+cd kedro/fraud-detection
+pip install -r requirements.txt
+```
+
+#### Project Structure
+
+```shell
+.
+├── app
+│   └── main.py
+├── kedro
+│   └── fraud_detection
+│       ├── conf
+│       │   ├── base
+│       │   └── local
+│       ├── data
+│       │   ├── 01_raw
+│       │   ├── 02_intermediate
+│       │   ├── 03_primary
+│       │   ├── 04_feature
+│       │   ├── 05_model_input
+│       │   ├── 06_models
+│       │   ├── 07_model_output
+│       │   └── 08_reporting
+│       ├── docs
+│       │   ├── build
+│       │   ├── imgs
+│       │   └── source
+│       ├── logs
+│       ├── notebooks
+│       └── src
+│           ├── build
+│           ├── fraud_detection
+│           └── tests
+└── mlruns
+```
+
+## Usage
+
+### Local Usage
+
+```shell
+  cd kedro/fraud-detection
+    
+  kedro <command>
+```
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
-
